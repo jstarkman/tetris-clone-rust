@@ -1,0 +1,3 @@
+#!/bin/sh
+cargo build --target wasm32-unknown-unknown
+python3 -m http.server --directory www
