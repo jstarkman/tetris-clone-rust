@@ -46,7 +46,7 @@ impl GameState {
 		if let Some(p) = self.current_piece.as_ref() {
 			let direction = if leftwards { -1 } else { 1 };
 			let dst = (self.current_piece_mass_xy.0 as isize + direction, self.current_piece_mass_xy.1 as isize);
-			if self.can_place(&p, dst) {
+			if self.can_place(p, dst) {
 				self.current_piece_mass_xy = (dst.0 as usize, dst.1 as usize);
 				return true;
 			}
@@ -54,7 +54,7 @@ impl GameState {
 		false
 	}
 
-	pub fn tick(&mut self) -> () {
+	pub fn tick(&mut self) {
 		self.current_piece_ticks_per_drop_have += 1;
 		if self.current_piece_ticks_per_drop_have < self.current_piece_ticks_per_drop_want {
 			return;
@@ -62,7 +62,7 @@ impl GameState {
 		self.current_piece_ticks_per_drop_have = 0;
 		if let Some(p) = self.current_piece.as_ref() {
 			let dst = (self.current_piece_mass_xy.0 as isize, self.current_piece_mass_xy.1 as isize + 1);
-			if self.can_place(&p, dst) {
+			if self.can_place(p, dst) {
 				self.current_piece_mass_xy = (dst.0 as usize, dst.1 as usize);
 			} else {
 				self.commit_current_piece();
@@ -73,7 +73,7 @@ impl GameState {
 		}
 	}
 
-	fn commit_current_piece(&mut self) -> () {
+	fn commit_current_piece(&mut self) {
 		if let Some(p) = self.current_piece.take() {
 			for c in p.cells.into_iter() {
 				let x = (self.current_piece_mass_xy.0 as i32 + c.x) as usize;
@@ -84,7 +84,7 @@ impl GameState {
 		}
 	}
 
-	fn clear_finished_rows(&mut self) -> () {
+	fn clear_finished_rows(&mut self) {
 		// clear and drop rows; is bubble-sort in slow motion
 		let mut anything_changed = false;
 		for i_row in 0 .. self.cell_matrix.len() {
@@ -119,7 +119,7 @@ impl GameState {
 		}
 	}
 
-	fn queue_new_piece(&mut self) -> () {
+	fn queue_new_piece(&mut self) {
 		let p = Piece::generate_new();
 		let init_xy = (self.cell_matrix_width / 2, 0); // HARDCODE Should this be random?
 		if !self.can_place(&p, (init_xy.0 as isize, init_xy.1 as isize)) {
@@ -148,7 +148,7 @@ impl GameState {
 		true
 	}
 
-	pub fn toggle_drop_rate(&mut self) -> () {
+	pub fn toggle_drop_rate(&mut self) {
 		// HARDCODE Faster/slower falling speeds
 		if self.current_piece_ticks_per_drop_want == 1 {
 			self.current_piece_ticks_per_drop_want = 10;

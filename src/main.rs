@@ -4,12 +4,12 @@ use macroquad::prelude::*;
 use macroquad::color;
 use miniquad::window::set_window_size;
 
-const GAME_OVER: &'static str = "GAME OVER";
-fn game_over() -> () {
+const GAME_OVER: &str = "GAME OVER";
+fn game_over() {
 	// FIXME prompt for another game with a new GameState
 	let width = screen_width();
 	let font_size = 48;
-	let dims = measure_text(&GAME_OVER, None, font_size, 1.0);
+	let dims = measure_text(GAME_OVER, None, font_size, 1.0);
 	draw_text(GAME_OVER, (width - dims.width) / 2.0, dims.offset_y, font_size as f32, RED);
 }
 
