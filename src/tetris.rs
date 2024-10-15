@@ -12,6 +12,7 @@ pub struct GameState {
 	current_piece_ticks_per_drop_have: u32,
 	/// Counter; never decremented.
 	pub rows_cleared: u32,
+	pub is_alive: bool,
 }
 
 impl GameState {
@@ -24,6 +25,7 @@ impl GameState {
 			current_piece_ticks_per_drop_want: 10, // HARDCODE see other writes to this field
 			current_piece_ticks_per_drop_have: 0,
 			rows_cleared: 0,
+			is_alive: true,
 		};
 		gs.queue_new_piece();
 		gs
@@ -119,8 +121,13 @@ impl GameState {
 
 	fn queue_new_piece(&mut self) -> () {
 		let p = Piece::generate_new();
+		let init_xy = (self.cell_matrix_width / 2, 0); // HARDCODE Should this be random?
+		if !self.can_place(&p, (init_xy.0 as isize, init_xy.1 as isize)) {
+			self.is_alive = false;
+			return;
+		}
 		self.current_piece = Some(p);
-		self.current_piece_mass_xy = (self.cell_matrix_width / 2, 0); // HARDCODE Should this be random?
+		self.current_piece_mass_xy = init_xy;
 	}
 
 	fn can_place(&self, p: &Piece, (global_x, global_y): (isize, isize)) -> bool {
