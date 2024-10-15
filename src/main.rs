@@ -38,8 +38,8 @@ async fn main() {
 		game_state.tick();
 
 		// Draw
-		clear_background(BLACK);
 		set_window_size(width_px as u32, height_px as u32);
+		clear_background(BLACK);
 
 		let score = game_state.rows_cleared.to_string();
 		let score_dims = measure_text(&score, None, score_font_size, 1.0);
@@ -49,7 +49,7 @@ async fn main() {
 		for row in game_state.cell_matrix.iter() {
 			for cell in row.cells.iter() {
 				if let Some(c) = cell {
-					let color = color::hsl_to_rgb(c.hue, 1.0, 0.5); // HARDCODE Maybe less saturated?
+					let color = color::hsl_to_rgb(c.hue, 0.5, 0.3); // HARDCODE Maybe less saturated?
 					draw_rectangle(x, y, cell_sidelength_px_f32, cell_sidelength_px_f32, color);
 				}
 				x += cell_sidelength_px_f32;
@@ -60,7 +60,7 @@ async fn main() {
 
 		if let Some(p) = game_state.current_piece.as_ref() {
 			for c in p.cells.iter() {
-				let color = color::hsl_to_rgb(c.cell.hue, 0.5, 0.5); // HARDCODE Maybe even less saturated?
+				let color = color::hsl_to_rgb(c.cell.hue, 1.0, 0.5); // HARDCODE Saturation?
 				let (x, y) = (c.x as f32, c.y as f32);
 				let (gx, gy) = (game_state.current_piece_mass_xy.0 as f32, game_state.current_piece_mass_xy.1 as f32);
 				let (x_px, y_px) = ((gx + x) * cell_sidelength_px_f32, (gy + y) * cell_sidelength_px_f32);
