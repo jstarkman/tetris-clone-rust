@@ -7,10 +7,6 @@ pub struct GameState {
 	pub current_piece: Option<Piece>,
 	/// Global coordinates of the center of mass of this piece; may or may not have a Cell.
 	pub current_piece_mass_xy: (i32, i32),
-	/// Time to fall by one cell-space, expressed in game ticks.
-	current_piece_ticks_per_drop_want: u32,
-	/// Time already spent falling by one cell-space, expressed in game ticks.
-	current_piece_ticks_per_drop_have: u32,
 	/// Counter; never decremented.
 	pub rows_cleared: u32,
 	pub is_alive: bool,
@@ -23,8 +19,6 @@ impl GameState {
 			cell_matrix_width: width,
 			current_piece: None, // generated below
 			current_piece_mass_xy: (0, 0), // ibid
-			current_piece_ticks_per_drop_want: 10, // HARDCODE see other writes to this field
-			current_piece_ticks_per_drop_have: 0,
 			rows_cleared: 0,
 			is_alive: true,
 		};
@@ -56,12 +50,7 @@ impl GameState {
 		false
 	}
 
-	pub fn tick(&mut self) {
-		self.current_piece_ticks_per_drop_have += 1;
-		if self.current_piece_ticks_per_drop_have < self.current_piece_ticks_per_drop_want {
-			return;
-		}
-		self.current_piece_ticks_per_drop_have = 0;
+	pub fn try_drop_current_piece(&mut self) {
 		if let Some(p) = self.current_piece.as_ref() {
 			let dst = (self.current_piece_mass_xy.0, self.current_piece_mass_xy.1 + 1);
 			if self.can_place(p, dst) {
@@ -144,15 +133,6 @@ impl GameState {
 					else { return false; };
 				cell.is_none()
 			})
-	}
-
-	pub fn toggle_drop_rate(&mut self) {
-		// HARDCODE Faster/slower falling speeds
-		if self.current_piece_ticks_per_drop_want == 1 {
-			self.current_piece_ticks_per_drop_want = 10;
-		} else {
-			self.current_piece_ticks_per_drop_want = 1;
-		}
 	}
 }
 

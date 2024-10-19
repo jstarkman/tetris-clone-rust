@@ -13,12 +13,23 @@ fn game_over() {
 	draw_text(GAME_OVER, (width - dims.width) / 2.0, dims.offset_y, font_size as f32, RED);
 }
 
+fn render_score(score: u32, score_font_size: u16) {
+	let score = score.to_string();
+	let score_dims = measure_text(&score, None, score_font_size, 1.0);
+	let width = screen_width();
+	let height = screen_height();
+	draw_text(&score, (width - score_dims.width) / 2.0, (height - score_dims.height) / 2.0, score_font_size as f32, DARKGRAY);
+}
+
 #[macroquad::main("Tetris clone in Rust")]
 async fn main() {
 	// HARDCODE Do a proper config system later
 	let width_cells = 8;
 	let height_cells = 24;
 	let cell_sidelength_px = 32;
+	// Time to fall by one cell-space, expressed in game ticks.
+	let ticks_per_drop_slow = 10_u32;
+	let ticks_per_drop_fast = 1_u32;
 	// derived config
 	let width_px = width_cells * cell_sidelength_px;
 	let height_px = height_cells * cell_sidelength_px;
@@ -26,39 +37,45 @@ async fn main() {
 	let cell_sidelength_px_f32 = cell_sidelength_px as f32;
 	// </config>
 	let mut game_state = tetris::GameState::new(height_cells, width_cells);
+	// Time already spent falling by one cell-space, expressed in game ticks.
+	let mut ticks_per_drop_want = ticks_per_drop_slow;
+	let mut ticks_per_drop_have = 0_u32;
 	loop {
 		if !game_state.is_alive {
 			game_over();
+			render_score(game_state.rows_cleared, score_font_size);
 			next_frame().await;
 			continue;
 		}
 		// Input
-		// FIXME framerate?
-		if is_key_down(KeyCode::Space) {
-			game_state.toggle_drop_rate();
+		if is_key_pressed(KeyCode::Space) {
+			ticks_per_drop_want = ticks_per_drop_fast;
+		} else if is_key_released(KeyCode::Space) {
+			ticks_per_drop_want = ticks_per_drop_slow;
 		}
 		// Only one direction at once, please.
-		if is_key_down(KeyCode::Up) {
+		if is_key_pressed(KeyCode::Up) {
 			game_state.try_rotate_current_piece(false);
-		} else if is_key_down(KeyCode::Down) {
+		} else if is_key_pressed(KeyCode::Down) {
 			game_state.try_rotate_current_piece(true);
-		} else if is_key_down(KeyCode::Left) {
+		} else if is_key_pressed(KeyCode::Left) {
 			game_state.try_leftright_current_piece(true);
-		} else if is_key_down(KeyCode::Right) {
+		} else if is_key_pressed(KeyCode::Right) {
 			game_state.try_leftright_current_piece(false);
 		}
 
 		// Logic
-		game_state.tick();
-		// println!("{:?}", game_state);
+		ticks_per_drop_have += 1;
+		if ticks_per_drop_have >= ticks_per_drop_want {
+			game_state.try_drop_current_piece();
+			ticks_per_drop_have = 0;
+		}
 
 		// Draw
 		set_window_size(width_px as u32, height_px as u32);
 		clear_background(BLACK);
 
-		let score = game_state.rows_cleared.to_string();
-		let score_dims = measure_text(&score, None, score_font_size, 1.0);
-		draw_text(&score, (width_px as f32 - score_dims.width) / 2.0, (height_px as f32 - score_dims.height) / 2.0, score_font_size as f32, DARKGRAY);
+		render_score(game_state.rows_cleared, score_font_size);
 
 		let (mut x, mut y) = (0.0, 0.0);
 		for row in game_state.cell_matrix.iter() {
