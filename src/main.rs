@@ -50,6 +50,7 @@ async fn main() {
 
 		// Logic
 		game_state.tick();
+		// println!("{:?}", game_state);
 
 		// Draw
 		set_window_size(width_px as u32, height_px as u32);
@@ -73,11 +74,9 @@ async fn main() {
 		}
 
 		if let Some(p) = game_state.current_piece.as_ref() {
-			for c in p.cells.iter() {
-				let color = color::hsl_to_rgb(c.cell.hue, 1.0, 0.5); // HARDCODE Saturation?
-				let (x, y) = (c.x as f32, c.y as f32);
-				let (gx, gy) = (game_state.current_piece_mass_xy.0 as f32, game_state.current_piece_mass_xy.1 as f32);
-				let (x_px, y_px) = ((gx + x) * cell_sidelength_px_f32, (gy + y) * cell_sidelength_px_f32);
+			for (c, x, y) in p.iter_global_space(game_state.current_piece_mass_xy) {
+				let color = color::hsl_to_rgb(c.hue, 1.0, 0.5); // HARDCODE Saturation?
+				let (x_px, y_px) = (x as f32 * cell_sidelength_px_f32, y as f32 * cell_sidelength_px_f32);
 				draw_rectangle(x_px, y_px, cell_sidelength_px_f32, cell_sidelength_px_f32, color);
 			}
 		}
