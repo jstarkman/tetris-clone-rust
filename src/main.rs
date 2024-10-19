@@ -67,7 +67,11 @@ async fn main() {
 		// Logic
 		ticks_per_drop_have += 1;
 		if ticks_per_drop_have >= ticks_per_drop_want {
-			game_state.try_drop_current_piece();
+			let did_drop = game_state.try_drop_current_piece();
+			if !did_drop {
+				// Something interesting happened, so we want to slow down enough to see it.
+				ticks_per_drop_want = ticks_per_drop_slow;
+			}
 			ticks_per_drop_have = 0;
 		}
 

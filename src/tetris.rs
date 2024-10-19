@@ -50,17 +50,20 @@ impl GameState {
 		false
 	}
 
-	pub fn try_drop_current_piece(&mut self) {
+	pub fn try_drop_current_piece(&mut self) -> bool {
 		if let Some(p) = self.current_piece.as_ref() {
 			let dst = (self.current_piece_mass_xy.0, self.current_piece_mass_xy.1 + 1);
 			if self.can_place(p, dst) {
 				self.current_piece_mass_xy = dst;
+				true
 			} else {
 				self.commit_current_piece();
 				self.clear_finished_rows();
+				false
 			}
 		} else {
 			self.queue_new_piece();
+			false
 		}
 	}
 
