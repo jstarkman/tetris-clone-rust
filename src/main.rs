@@ -107,6 +107,11 @@ async fn main() {
 		set_window_size(width_px as u32, height_px as u32);
 		clear_background(BLACK);
 
+		for column in (0 .. width_cells).step_by(4).skip(1) {
+			let column_px = column as f32 * cell_sidelength_px_f32;
+			draw_line(column_px, 0.0, column_px, height_px as f32, 1.0, DARKGRAY);
+		}
+
 		render_score(game_state.rows_cleared, score_font_size);
 
 		let (mut x, mut y) = (0.0, 0.0);
