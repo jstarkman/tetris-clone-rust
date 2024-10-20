@@ -25,8 +25,8 @@ extern "C" {
 }
 
 const GAME_OVER: &str = "GAME OVER";
-fn game_over(game_state: &mut tetris::GameState) {
-	let width = screen_width();
+fn game_over(game_state: &mut tetris::GameState, width: usize) {
+	let width = width as f32;
 	let font_size = 48;
 	let dims_game_over = measure_text(GAME_OVER, None, font_size, 1.0);
 	draw_text(GAME_OVER, (width - dims_game_over.width) / 2.0, dims_game_over.offset_y, font_size as f32, RED);
@@ -58,11 +58,11 @@ fn game_over(game_state: &mut tetris::GameState) {
 	});
 }
 
-fn render_score(score: u32, score_font_size: u16) {
+fn render_score(score: u32, score_font_size: u16, width: usize, height: usize) {
 	let score = score.to_string();
 	let score_dims = measure_text(&score, None, score_font_size, 1.0);
-	let width = screen_width();
-	let height = screen_height();
+	let width = width as f32;
+	let height = height as f32;
 	draw_text(&score, (width - score_dims.width) / 2.0, (height - score_dims.height) / 2.0, score_font_size as f32, DARKGRAY);
 }
 
@@ -86,9 +86,11 @@ async fn main() {
 	let mut ticks_per_drop_want = ticks_per_drop_slow;
 	let mut ticks_per_drop_have = 0_u32;
 	loop {
+		set_window_size(width_px as u32, height_px as u32);
+		clear_background(BLACK);
 		if !game_state.is_alive {
-			game_over(&mut game_state);
-			render_score(game_state.rows_cleared, score_font_size);
+			game_over(&mut game_state, width_px);
+			render_score(game_state.rows_cleared, score_font_size, width_px, height_px);
 			next_frame().await;
 			continue;
 		}
@@ -121,15 +123,12 @@ async fn main() {
 		}
 
 		// Draw
-		set_window_size(width_px as u32, height_px as u32);
-		clear_background(BLACK);
-
 		for column in (0 .. width_cells).step_by(4).skip(1) {
 			let column_px = column as f32 * cell_sidelength_px_f32;
 			draw_line(column_px, 0.0, column_px, height_px as f32, 1.0, DARKGRAY);
 		}
 
-		render_score(game_state.rows_cleared, score_font_size);
+		render_score(game_state.rows_cleared, score_font_size, width_px, height_px);
 
 		let (mut x, mut y) = (0.0, 0.0);
 		for row in game_state.cell_matrix.iter() {
