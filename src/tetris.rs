@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use rand::Rng;
+
 #[derive(Debug)]
 pub struct GameState {
 	/// Indexing: cell_matrix[y].cells[x] = Some(foo_cell);
@@ -115,7 +119,10 @@ impl GameState {
 
 	fn queue_new_piece(&mut self) {
 		let p = Piece::generate_new();
-		let init_xy = (self.cell_matrix_width as i32 / 2, 0); // HARDCODE Should this be random?
+		let clearance = p.iter_global_space((0, 0)).map(|(_c, _x, y)| y).min()
+			.expect("Should have cells")
+			.abs();
+		let init_xy = (self.cell_matrix_width as i32 / 2, clearance); // HARDCODE Should this be random?
 		if !self.can_place(&p, init_xy) {
 			self.is_alive = false;
 			return;
@@ -185,19 +192,36 @@ impl <'a> Iterator for PieceGlobalSpaceIter<'a> {
 }
 
 impl Piece {
+	const OFFSETS: [(i32, i32); 4] = [(0, 1), (1, 0), (0, -1), (-1, 0)];
 	fn generate_new() -> Piece {
-		let hue: f32 = rand::random();
-		Self {
-			// FIXME placeholder
-			cells: vec![
-				CellWithRelativePosition { cell: Cell::new(hue), x: 0, y: 0, },
-				CellWithRelativePosition { cell: Cell::new(hue), x: 1, y: 0, },
-				CellWithRelativePosition { cell: Cell::new(hue), x: 2, y: 0, },
-				CellWithRelativePosition { cell: Cell::new(hue), x: 3, y: 0, }
-			],
-			center_of_mass_x: 1,
-			center_of_mass_y: 0,
+		// Idea: randomly attach each new cell to an empty site on the existing piece's perimeter.
+		let mut rng = rand::thread_rng();
+		let hue: f32 = rng.gen_range(0.0 .. 1.0);
+		// Why limit ourselves to just *tetr*-is?
+		let size = rng.gen_range(3 ..= 5);
+		// This is biased towards T- and L-shaped pieces; is that a good thing?
+		let mut cells = vec![CellWithRelativePosition { cell: Cell::new(hue), x: 0, y: 0, }];
+		let mut sites = HashSet::from(Self::OFFSETS);
+		for _ in 1 .. size {
+			let idx = rng.gen_range(0 .. sites.len());
+			let &(x, y) = sites.iter().skip(idx).next()
+				.expect("Should have generated a valid index");
+			cells.push(CellWithRelativePosition { cell: Cell::new(hue), x, y, });
+			sites.remove(&(x, y));
+			for (xx, yy) in Self::OFFSETS.iter().map(|(dx, dy)| (x+dx, y+dy)) {
+				let is_blocked = cells.iter().any(|c| c.x == xx && c.y == yy);
+				if !is_blocked {
+					let _already_had = sites.insert((xx, yy));
+				}
+			}
 		}
+		let (center_of_mass_x, center_of_mass_y) = {
+			let (x, y) = cells.iter()
+				.fold((0, 0), |(acc_x, acc_y), c| (acc_x + c.x, acc_y + c.y));
+			let m = cells.len() as f32;
+			((x as f32 / m).round() as i32, (y as f32 / m).round() as i32)
+		};
+		Self { cells, center_of_mass_x, center_of_mass_y }
 	}
 
 	fn rotated(&self, clockwise: bool) -> Piece {
