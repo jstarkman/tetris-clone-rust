@@ -30,6 +30,14 @@ impl GameState {
 		gs
 	}
 
+	pub fn reset(&mut self) {
+		self.cell_matrix.iter_mut().for_each(|row| row.reset());
+		self.current_piece = None;
+		self.current_piece_mass_xy = (0, 0);
+		self.rows_cleared = 0;
+		self.is_alive = true;
+	}
+
 	pub fn try_rotate_current_piece(&mut self, clockwise: bool) -> bool {
 		if let Some(p_old) = self.current_piece.as_ref() {
 			let p_new = p_old.rotated(clockwise);
@@ -158,6 +166,11 @@ impl Row {
 			cells: vec![None; width],
 			is_empty: true,
 		}
+	}
+
+	fn reset(&mut self) {
+		self.cells.iter_mut().for_each(|c| *c = None);
+		self.is_empty = true;
 	}
 }
 

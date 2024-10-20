@@ -2,15 +2,43 @@ mod tetris;
 
 use macroquad::prelude::*;
 use macroquad::color;
+use macroquad::ui;
+use macroquad::ui::hash; // bugged; must be imported with no prefix
+use macroquad::ui::widgets;
 use miniquad::window::set_window_size;
 
 const GAME_OVER: &str = "GAME OVER";
-fn game_over() {
-	// FIXME prompt for another game with a new GameState
+fn game_over(game_state: &mut tetris::GameState) {
 	let width = screen_width();
 	let font_size = 48;
-	let dims = measure_text(GAME_OVER, None, font_size, 1.0);
-	draw_text(GAME_OVER, (width - dims.width) / 2.0, dims.offset_y, font_size as f32, RED);
+	let dims_game_over = measure_text(GAME_OVER, None, font_size, 1.0);
+	draw_text(GAME_OVER, (width - dims_game_over.width) / 2.0, dims_game_over.offset_y, font_size as f32, RED);
+	let button_bar_size = Vec2::new(width, font_size as f32);
+	let button_padding_px = 4.0;
+	ui::root_ui().window(hash!(), Vec2::new(0.0, dims_game_over.offset_y), button_bar_size, |ui| {
+		let skin = ui::Skin {
+			button_style: ui.style_builder()
+				.font_size(font_size / 2)
+				.text_color(LIGHTGRAY)
+				.color(DARKGRAY)
+				.build(),
+			..ui.default_skin()
+		};
+		ui.push_skin(&skin);
+		let button_restart = widgets::Button::new("Restart")
+			.position(Vec2::new(button_padding_px, button_padding_px))
+			.size(Vec2::new(button_bar_size.x / 2.0 - (button_padding_px * 2.0), button_bar_size.y - (button_padding_px * 2.0)));
+		if button_restart.ui(ui) {
+			game_state.reset();
+		}
+		let button_quit = widgets::Button::new("Quit")
+			.position(Vec2::new(button_bar_size.x / 2.0 + button_padding_px, button_padding_px))
+			.size(Vec2::new(button_bar_size.x / 2.0 - (button_padding_px * 2.0), button_bar_size.y - (button_padding_px * 2.0)));
+		if button_quit.ui(ui) {
+			std::process::exit(0);
+		}
+		ui.pop_skin();
+	});
 }
 
 fn render_score(score: u32, score_font_size: u16) {
@@ -42,7 +70,7 @@ async fn main() {
 	let mut ticks_per_drop_have = 0_u32;
 	loop {
 		if !game_state.is_alive {
-			game_over();
+			game_over(&mut game_state);
 			render_score(game_state.rows_cleared, score_font_size);
 			next_frame().await;
 			continue;
