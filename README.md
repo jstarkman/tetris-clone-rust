@@ -1,5 +1,9 @@
 # Tetris clone in Rust
 
+## Screenshot
+
+![Composite screenshot of main game state and loss screen.](./docs/example.png)
+
 ## Intent
 
 ### Goals
@@ -10,6 +14,8 @@
 	+ Minimum viable product: random colors
 	+ Expanding: what if the pieces did not have to have four parts?
 		+ Would that make the title "Tetra/Pent/Hex-is"?
+	+ Current status: randomly chooses three to five parts, then randomly
+	  builds each piece
 + Run smoothly
 	+ Should not be difficult for a forty-year-old game
 
