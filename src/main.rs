@@ -1,3 +1,4 @@
+mod rng;
 mod tetris;
 
 use macroquad::prelude::*;

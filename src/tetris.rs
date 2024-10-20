@@ -1,9 +1,10 @@
 use std::collections::HashSet;
 
-use rand::Rng;
+use crate::rng;
 
 #[derive(Debug)]
 pub struct GameState {
+	rng: Box<rng::RandomNumberGenerator>,
 	/// Indexing: cell_matrix[y].cells[x] = Some(foo_cell);
 	pub cell_matrix: Vec<Row>,
 	pub cell_matrix_width: usize,
@@ -19,6 +20,7 @@ pub struct GameState {
 impl GameState {
 	pub fn new(height: usize, width: usize) -> GameState {
 		let mut gs = Self {
+			rng: Box::default(),
 			cell_matrix: (0 .. height).map(|_| Row::new(width)).collect(),
 			cell_matrix_width: width,
 			current_piece: None, // generated below
@@ -126,7 +128,7 @@ impl GameState {
 	}
 
 	fn queue_new_piece(&mut self) {
-		let p = Piece::generate_new();
+		let p: Piece = Piece::generate_new(&mut self.rng);
 		let clearance = p.iter_global_space((0, 0)).map(|(_c, _x, y)| y).min()
 			.expect("Should have cells")
 			.abs();
@@ -204,17 +206,16 @@ impl <'a> Iterator for PieceGlobalSpaceIter<'a> {
 
 impl Piece {
 	const OFFSETS: [(i32, i32); 4] = [(0, 1), (1, 0), (0, -1), (-1, 0)];
-	fn generate_new() -> Piece {
+	fn generate_new(rng: &mut rng::RandomNumberGenerator) -> Piece {
 		// Idea: randomly attach each new cell to an empty site on the existing piece's perimeter.
-		let mut rng = rand::thread_rng();
-		let hue: f32 = rng.gen_range(0.0 .. 1.0);
+		let hue: f32 = rng.uniform(0.0, 1.0);
 		// Why limit ourselves to just *tetr*-is?
-		let size = rng.gen_range(3 ..= 5);
+		let size = rng.uniform(3, 6);
 		// This is biased towards T- and L-shaped pieces; is that a good thing?
 		let mut cells = vec![CellWithRelativePosition { cell: Cell::new(hue), x: 0, y: 0, }];
 		let mut sites = HashSet::from(Self::OFFSETS);
 		for _ in 1 .. size {
-			let idx = rng.gen_range(0 .. sites.len());
+			let idx = rng.uniform(0, sites.len());
 			let &(x, y) = sites.iter().nth(idx)
 				.expect("Should have generated a valid index");
 			cells.push(CellWithRelativePosition { cell: Cell::new(hue), x, y, });
