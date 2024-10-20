@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 macroquad = "0.4"
 getrandom = { version = "0.2", features = ["js"] }
+miniquad = "0.4.6"

@@ -8,6 +8,22 @@ use macroquad::ui::hash; // bugged; must be imported with no prefix
 use macroquad::ui::widgets;
 use miniquad::window::set_window_size;
 
+#[cfg(not(target_family="wasm"))]
+fn quit() {
+	std::process::exit(0);
+}
+
+#[cfg(target_family="wasm")]
+fn quit() {
+	unsafe { // SAFETY: crashing still accomplishes our goal
+		close_window();
+	}
+}
+#[cfg(target_family="wasm")]
+extern "C" {
+	fn close_window();
+}
+
 const GAME_OVER: &str = "GAME OVER";
 fn game_over(game_state: &mut tetris::GameState) {
 	let width = screen_width();
@@ -36,7 +52,7 @@ fn game_over(game_state: &mut tetris::GameState) {
 			.position(Vec2::new(button_bar_size.x / 2.0 + button_padding_px, button_padding_px))
 			.size(Vec2::new(button_bar_size.x / 2.0 - (button_padding_px * 2.0), button_bar_size.y - (button_padding_px * 2.0)));
 		if button_quit.ui(ui) {
-			std::process::exit(0);
+			quit();
 		}
 		ui.pop_skin();
 	});
