@@ -100,6 +100,10 @@ async fn main() {
 				let (x_px, y_px) = (x as f32 * cell_sidelength_px_f32, y as f32 * cell_sidelength_px_f32);
 				draw_rectangle(x_px, y_px, cell_sidelength_px_f32, cell_sidelength_px_f32, color);
 			}
+			let com_x = (game_state.current_piece_mass_xy.0 as f32 + 0.5) * cell_sidelength_px_f32;
+			let com_y = (game_state.current_piece_mass_xy.1 as f32 + 0.5) * cell_sidelength_px_f32;
+			draw_circle(com_x, com_y, 8.0, BLACK); // HARDCODE
+			draw_circle(com_x, com_y, 4.0, WHITE); // HARDCODE
 		}
 
 		next_frame().await
