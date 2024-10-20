@@ -204,7 +204,7 @@ impl Piece {
 		let mut sites = HashSet::from(Self::OFFSETS);
 		for _ in 1 .. size {
 			let idx = rng.gen_range(0 .. sites.len());
-			let &(x, y) = sites.iter().skip(idx).next()
+			let &(x, y) = sites.iter().nth(idx)
 				.expect("Should have generated a valid index");
 			cells.push(CellWithRelativePosition { cell: Cell::new(hue), x, y, });
 			sites.remove(&(x, y));
@@ -242,7 +242,7 @@ impl Piece {
 
 	pub fn iter_global_space(&self, xy: (i32, i32)) -> PieceGlobalSpaceIter {
 		PieceGlobalSpaceIter {
-			piece: &self,
+			piece: self,
 			i_cells: 0,
 			global_xy: xy,
 		}
