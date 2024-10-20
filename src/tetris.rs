@@ -172,22 +172,20 @@ pub struct Piece {
 
 pub struct PieceGlobalSpaceIter<'a> {
 	piece: &'a Piece,
-	i_cells: usize,
+	iter_cells: std::slice::Iter<'a, CellWithRelativePosition>,
 	global_xy: (i32, i32),
 }
 
 impl <'a> Iterator for PieceGlobalSpaceIter<'a> {
 	type Item = (&'a Cell, i32, i32);
 	fn next(&mut self) -> Option<Self::Item> {
-		let retval = self.piece.cells
-			.get(self.i_cells)
+		self.iter_cells
+			.next()
 			.map(|c| {
 				let x = self.global_xy.0 + c.x - self.piece.center_of_mass_x;
 				let y = self.global_xy.1 + c.y - self.piece.center_of_mass_y;
 				(&c.cell, x, y)
-			});
-		self.i_cells += 1;
-		retval
+			})
 	}
 }
 
@@ -243,7 +241,7 @@ impl Piece {
 	pub fn iter_global_space(&self, xy: (i32, i32)) -> PieceGlobalSpaceIter {
 		PieceGlobalSpaceIter {
 			piece: self,
-			i_cells: 0,
+			iter_cells: self.cells.iter(),
 			global_xy: xy,
 		}
 	}
